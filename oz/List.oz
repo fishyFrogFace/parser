@@ -1,7 +1,14 @@
 functor
-import
-    Application(exit:Exit)
-    System
+export
+    length:Length
+    take:Take
+    drop:Drop
+    append:Append
+    member:Member
+    position:Position
+    dropWhile:DropWhile
+    split:Split
+    map:Map
 define
     fun {Length List}
         case List of H|T then
@@ -63,5 +70,57 @@ define
         end
     end
 
-    {Exit 0}
+    fun {DropWhile Condition List}
+        case List of
+            nil then nil
+            [] H|T then
+                if {Condition H} then
+                    {DropWhile Condition T}
+                else
+                    List
+                end
+        end
+    end
+    
+    /* how to send in negative of Condition from another function? */
+    fun {Break Condition List}
+        case List of
+            nil then nil#nil
+            [] H|T then
+                local N B in
+                    N#B = {Break Condition T}
+                    if {Condition H} then
+                        (H|N)#B
+                    else
+                        nil#T
+                    end 
+                end 
+         end     
+     end 
+
+    fun {NotSpace Ch}
+        if Ch == 32 then
+            false
+        else
+            true
+        end 
+    end 
+ 
+ 
+    fun {Split List}
+        local N B in
+            N#B = {Break NotSpace List}
+            case {DropWhile Char.isSpace List} of
+                nil then nil
+                [] H|T then N|{Split B}
+            end
+        end
+    end
+
+    fun {Map Func List}
+        case List of
+            nil then nil
+            [] H|T then {Func H}|{Map Func T}
+        end
+    end
 end
