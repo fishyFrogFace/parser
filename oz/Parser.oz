@@ -24,18 +24,20 @@ define
     fun {OneToken Lexeme}
         case Lexeme of
             nil then nil
-            [] H|T then
+            [] _|_ then
                 if {CheckInts Lexeme} then
-                    number(String.toInt Lexeme)
-                elseif {List.member ["+" "-" "/" "*"] Lexeme} then
+                    number({String.toInt Lexeme})
+                elseif {List.member ["+" "-" "/" "*" "p" "d"] Lexeme} then
                     case Lexeme of
                         "+" then operator(type:plus)
                         [] "-" then operator(type:minus)
                         [] "/" then operator(type:divide)
                         [] "*" then operator(type:multiply)
+                        [] "p" then command({String.toAtom Lexeme})
+                        [] "d" then command({String.toAtom Lexeme})
                     end
                 else
-                    {System.show "Parse error, invalid character"} 
+                    invalid({String.toAtom Lexeme}) 
                 end
         end
     end
@@ -43,4 +45,41 @@ define
     fun {Tokenize Lexemes}
         {List.map OneToken Lexemes}
     end
+    
+    fun {Interpret Tokens}
+        Operators = ops(
+                        minus:Number.'-'
+                        plus:Number.'+'
+                        divide:Int.'div'
+                        multiply:Number.'*')
+        Commands = cmd(
+                        p:proc {$ Stack} {System.show {List.reverse Stack}} end
+                        d:fun {$ H|T} H|H|T end)
+        fun {Iterate Stack Tokens}
+            case Tokens of
+                nil then {List.reverse Stack}
+            [] number(Num)|T then {Iterate Num|Stack T}
+            [] invalid(E)|_ then ["Parse error"]|Stack
+            [] command(p)|T then 
+                {Commands.p Stack}
+                {Iterate Stack T}
+            [] command(d)|T then {Iterate {Commands.d Stack} T}
+            [] operator(type:Op)|T then
+                case Stack of
+                    nil then ["Stack empty"]|Stack
+                    [] _|nil then ["Operation on one element"]|Stack
+                    [] Num1|Num2|Remainder then
+                        if {And {IsInt Num1} {IsInt Num2}} then
+                            {Iterate {Operators.Op Num2 Num1}|Remainder T}
+                        else
+                            ["Operation on non-numerals"]|Stack
+                        end
+                end
+            end
+        end
+        in
+        {Iterate nil Tokens}
+    end    
+   
+    {Exit 0}
 end

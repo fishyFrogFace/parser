@@ -9,9 +9,10 @@ export
     dropWhile:DropWhile
     split:Split
     map:Map
+    reverse:Reverse
 define
     fun {Length List}
-        case List of H|T then
+        case List of _|T then
             1 + {Length T}
         else
             0
@@ -34,7 +35,7 @@ define
         if Count > 0 then
             case List of nil then
                 nil
-            [] H|T then {Drop T Count-1}
+            [] _|T then {Drop T Count-1}
             end
         else
             List
@@ -96,7 +97,7 @@ define
                     end 
                 end 
          end     
-     end 
+    end 
 
     fun {NotSpace Ch}
         if Ch == 32 then
@@ -112,7 +113,7 @@ define
             N#B = {Break NotSpace List}
             case {DropWhile Char.isSpace List} of
                 nil then nil
-                [] H|T then N|{Split B}
+                [] _|_ then N|{Split B}
             end
         end
     end
@@ -123,4 +124,16 @@ define
             [] H|T then {Func H}|{Map Func T}
         end
     end
+
+    fun {Reverse List}
+        fun {RevList Acc List}
+            case List of
+                nil then Acc
+                [] H|T then {RevList H|Acc T}
+            end
+        end
+        in
+        {RevList nil List}
+    end
+
 end
