@@ -61,20 +61,26 @@ define
             case Tokens of
                 nil then {List.reverse Stack}
             [] number(Num)|T then {Iterate number(Num)|Stack T}
-            [] invalid(E)|_ then ["Parse error"]|Stack
+            [] invalid(E)|_ then error(parse)|Stack
             [] command(p)|T then 
                 {Commands.p Stack}
                 {Iterate Stack T}
             [] command(d)|T then {Iterate {Commands.d Stack} T}
-            [] operator(type:inverse) then {Iterate Stack Tokens} 
+            [] operator(type:inverse)|T then
+                case Stack of
+                    nil then error(emptyStack)|Stack
+                    [] number(Num)|Remainder then {Iterate number(~Num)|Remainder T}
+                    else
+                        error(nonNum)|Stack
+                    end
             [] operator(type:Op)|T then
                 case Stack of
-                    nil then ["Stack empty"]|Stack
-                    [] _|nil then ["Operation on one element"]|Stack
+                    nil then error(emptyStack)|Stack
+                    [] _|nil then error(emptyStack)|Stack
                     [] number(Num1)|number(Num2)|Remainder then
                         {Iterate number({Operators.Op Num2 Num1})|Remainder T}
                     else
-                        ["Operation on non-numerals"]|Stack
+                        error(nonNum)|Stack
                 end
             end
         end
@@ -93,4 +99,5 @@ define
         {F read(list:Input size:all)}
         {System.show{List.map Execute {List.lines Input}}}
     end
+    {Exit 0}
 end
