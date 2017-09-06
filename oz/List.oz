@@ -8,8 +8,10 @@ export
     position:Position
     dropWhile:DropWhile
     split:Split
+    splitOn:SplitOn
     map:Map
     reverse:Reverse
+    lines:Lines
 define
     fun {Length List}
         case List of _|T then
@@ -83,39 +85,43 @@ define
         end
     end
     
-    /* how to send in negative of Condition from another function? */
-    fun {Break Condition List}
+    fun lazy {Break Condition List}
         case List of
             nil then nil#nil
             [] H|T then
                 local N B in
                     N#B = {Break Condition T}
-                    if {Condition H} then
+                    if {Not {Condition H}} then
                         (H|N)#B
                     else
                         nil#T
                     end 
                 end 
          end     
-    end 
+    end
 
-    fun {NotSpace Ch}
-        if Ch == 32 then
-            false
-        else
-            true
-        end 
-    end 
- 
- 
-    fun {Split List}
+    fun {Curried Func A}
+        fun {$ B}
+            {Func A B}
+        end
+    end
+
+    fun {SplitOn List Ch}
         local N B in
-            N#B = {Break NotSpace List}
-            case {DropWhile Char.isSpace List} of
+            N#B = {Break {Curried Value.'==' Ch} List}
+            case {DropWhile {Curried Value.'==' Ch} List} of
                 nil then nil
-                [] _|_ then N|{Split B}
+                [] _|_ then N|{SplitOn B Ch}
             end
         end
+    end
+ 
+    fun {Split List}
+        {SplitOn List 32}
+    end
+
+    fun {Lines List}
+        {SplitOn List 10}
     end
 
     fun {Map Func List}
@@ -126,7 +132,7 @@ define
     end
 
     fun {Reverse List}
-        fun {RevList Acc List}
+       fun {RevList Acc List}
             case List of
                 nil then Acc
                 [] H|T then {RevList H|Acc T}

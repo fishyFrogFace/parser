@@ -3,6 +3,7 @@ import
     Application(exit:Exit)
     System
     List at './List.ozf'
+    Open
 define
     fun {Lex Input}
         {List.split Input}
@@ -27,7 +28,7 @@ define
             [] _|_ then
                 if {CheckInts Lexeme} then
                     number({String.toInt Lexeme})
-                elseif {List.member ["+" "-" "/" "*" "p" "d"] Lexeme} then
+                elseif {List.member ["+" "-" "/" "*" "p" "d" "^"] Lexeme} then
                     case Lexeme of
                         "+" then operator(type:plus)
                         [] "-" then operator(type:minus)
@@ -35,6 +36,7 @@ define
                         [] "*" then operator(type:multiply)
                         [] "p" then command({String.toAtom Lexeme})
                         [] "d" then command({String.toAtom Lexeme})
+                        [] "^" then operator(type:inverse)
                     end
                 else
                     invalid({String.toAtom Lexeme}) 
@@ -58,28 +60,37 @@ define
         fun {Iterate Stack Tokens}
             case Tokens of
                 nil then {List.reverse Stack}
-            [] number(Num)|T then {Iterate Num|Stack T}
+            [] number(Num)|T then {Iterate number(Num)|Stack T}
             [] invalid(E)|_ then ["Parse error"]|Stack
             [] command(p)|T then 
                 {Commands.p Stack}
                 {Iterate Stack T}
             [] command(d)|T then {Iterate {Commands.d Stack} T}
+            [] operator(type:inverse) then {Iterate Stack Tokens} 
             [] operator(type:Op)|T then
                 case Stack of
                     nil then ["Stack empty"]|Stack
                     [] _|nil then ["Operation on one element"]|Stack
-                    [] Num1|Num2|Remainder then
-                        if {And {IsInt Num1} {IsInt Num2}} then
-                            {Iterate {Operators.Op Num2 Num1}|Remainder T}
-                        else
-                            ["Operation on non-numerals"]|Stack
-                        end
+                    [] number(Num1)|number(Num2)|Remainder then
+                        {Iterate number({Operators.Op Num2 Num1})|Remainder T}
+                    else
+                        ["Operation on non-numerals"]|Stack
                 end
             end
         end
         in
         {Iterate nil Tokens}
-    end    
-   
-    {Exit 0}
+    end
+    
+    fun {Execute Line}
+        {Interpret {Tokenize {Lex Line}}}
+    end
+
+    local
+        Input
+        F = {New Open.file init(name:'./Parser.txt' flags:[read])}
+    in
+        {F read(list:Input size:all)}
+        {System.show{List.map Execute {List.lines Input}}}
+    end
 end
