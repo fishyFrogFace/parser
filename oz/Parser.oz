@@ -22,6 +22,11 @@ define
                             [] H|T then H|H|T
                             end
                       end)
+    Inverses = inv(
+                   i:Number.'~'
+                   m:fun {$ Num}
+                        1.0/Num
+                     end)
 
     fun {Lex Input}
         {List.split Input}
@@ -46,7 +51,7 @@ define
             [] _|_ then
                 if {CheckInts Lexeme} then
                     number({String.toFloat Lexeme})
-                elseif {List.member ["+" "-" "/" "*" "p" "d" "^"] Lexeme} then
+                elseif {List.member ["+" "-" "/" "*" "p" "d" "^" "i"] Lexeme} then
                     case Lexeme of
                         "+" then operator(type:plus)
                         [] "-" then operator(type:minus)
@@ -54,7 +59,8 @@ define
                         [] "*" then operator(type:multiply)
                         [] "p" then command({String.toAtom Lexeme})
                         [] "d" then command({String.toAtom Lexeme})
-                        [] "^" then operator(type:inverse)
+                        [] "^" then inverse(m)
+                        [] "i" then operator(String.toAtom Lexeme)
                     end
                 else
                     invalid({String.toAtom Lexeme}) 
@@ -73,14 +79,14 @@ define
                 nil then {List.reverse Stack}
             [] number(Num)|T then {Iterate number(Num)|Stack T}
             [] invalid(_)|_ then error(parse)|Stack
-            [] command(p)|T then 
+            [] command(p)|T then
                 {Commands.p Stack}
                 {Iterate Stack T}
             [] command(d)|T then {Iterate {Commands.d Stack} T}
-            [] operator(type:inverse)|T then
+            [] inverse(Inv)|T then
                 case Stack of
                     nil then error(emptyStack)|Stack
-                    [] number(Num)|Remainder then {Iterate number(~Num)|Remainder T}
+                    [] number(Num)|Remainder then {Iterate number({Inverses.Inv Num})|Remainder T}
                     else
                         error(nonNum)|Stack
                     end
