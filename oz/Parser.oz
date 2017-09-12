@@ -1,10 +1,28 @@
 functor
 import
-    Application(exit:Exit)
     System
     List at './List.ozf'
-    Open
+export
+    execute:Execute
+    tokenize:Tokenize
+    lex:Lex
+    interpret:Interpret
 define
+    
+    Opmap = ops(
+                    minus:Number.'-'
+                    plus:Number.'+'
+                    divide:Int.'div'
+                    multiply:Number.'*')
+    Commands = cmd(
+                    p:proc {$ Stack} {System.show {List.reverse Stack}} end
+                    d:fun {$ Stack}
+                        case Stack of
+                            nil then nil
+                            [] H|T then H|H|T
+                            end
+                      end)
+
     fun {Lex Input}
         {List.split Input}
     end 
@@ -27,7 +45,7 @@ define
             nil then nil
             [] _|_ then
                 if {CheckInts Lexeme} then
-                    number({String.toInt Lexeme})
+                    number({String.toFloat Lexeme})
                 elseif {List.member ["+" "-" "/" "*" "p" "d" "^"] Lexeme} then
                     case Lexeme of
                         "+" then operator(type:plus)
@@ -47,21 +65,14 @@ define
     fun {Tokenize Lexemes}
         {List.map OneToken Lexemes}
     end
-    
+
+
     fun {Interpret Tokens}
-        Operators = ops(
-                        minus:Number.'-'
-                        plus:Number.'+'
-                        divide:Int.'div'
-                        multiply:Number.'*')
-        Commands = cmd(
-                        p:proc {$ Stack} {System.show {List.reverse Stack}} end
-                        d:fun {$ H|T} H|H|T end)
         fun {Iterate Stack Tokens}
             case Tokens of
                 nil then {List.reverse Stack}
             [] number(Num)|T then {Iterate number(Num)|Stack T}
-            [] invalid(E)|_ then error(parse)|Stack
+            [] invalid(_)|_ then error(parse)|Stack
             [] command(p)|T then 
                 {Commands.p Stack}
                 {Iterate Stack T}
@@ -78,7 +89,7 @@ define
                     nil then error(emptyStack)|Stack
                     [] _|nil then error(emptyStack)|Stack
                     [] number(Num1)|number(Num2)|Remainder then
-                        {Iterate number({Operators.Op Num2 Num1})|Remainder T}
+                        {Iterate number({Opmap.Op Num2 Num1})|Remainder T}
                     else
                         error(nonNum)|Stack
                 end
@@ -91,13 +102,4 @@ define
     fun {Execute Line}
         {Interpret {Tokenize {Lex Line}}}
     end
-
-    local
-        Input
-        F = {New Open.file init(name:'./Parser.txt' flags:[read])}
-    in
-        {F read(list:Input size:all)}
-        {System.show{List.map Execute {List.lines Input}}}
-    end
-    {Exit 0}
 end
