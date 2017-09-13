@@ -1,7 +1,6 @@
 functor
 import
     List at './List.ozf'
-    System
 export
     shunt:Shunt
 define
@@ -47,6 +46,4 @@ define
     fun {Shunt Tokens}
         {ShuntTokens Tokens nil nil}
     end
-    
-    {System.show {Shunt [number(3.0) operator(type:minus) number(10.0) operator(type:multiply) number(9.0) operator(type:plus) number(3.0)]}}
 end
