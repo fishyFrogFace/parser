@@ -12,7 +12,7 @@ define
     Opmap = ops(
                     minus:Number.'-'
                     plus:Number.'+'
-                    divide:Int.'div'
+                    divide:Float.'/'
                     multiply:Number.'*')
     Commands = cmd(
                     p:proc {$ Stack} {System.show {List.reverse Stack}} end
@@ -30,18 +30,38 @@ define
 
     fun {Lex Input}
         {List.split Input}
-    end 
-    
-    /*doesn't catch original empty string*/
-    fun {CheckInts List}
-        case List of
-            nil then true
-            [] H|T then
-                if {And (H =< 57) (H >= 48)} then
-                    {CheckInts T}
-                else
-                    false
+    end
+ 
+    fun {CheckInts L}
+        fun {CheckIntsInternal L}
+            case L of
+                nil then true
+                [] H|T then
+                    if {And (H =< 57) (H >= 48)} then
+                        {CheckIntsInternal T}
+                    else
+                        false
+                    end
             end
+        end
+        in
+        case L of
+            nil then false
+            [] _|_ then {CheckIntsInternal L}
+        end
+    end
+    
+    fun {FloatSplit L}
+        {List.map CheckInts {List.splitOn L 46}}
+    end
+
+    fun {CheckFloats L}
+        case {FloatSplit L} of
+            nil then false
+            [] true|true|nil then true
+            [] true|nil then true
+            else
+                false
         end
     end
     
@@ -49,7 +69,7 @@ define
         case Lexeme of
             nil then nil
             [] _|_ then
-                if {CheckInts Lexeme} then
+                if {CheckFloats Lexeme} then
                     number({String.toFloat Lexeme})
                 elseif {List.member ["+" "-" "/" "*" "p" "d" "^" "i"] Lexeme} then
                     case Lexeme of
