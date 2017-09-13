@@ -1,16 +1,17 @@
 functor
 import
     List at './List.ozf'
+    System
 export
     shunt:Shunt
 define
 
     OpPrec = ops(
                  minus:0
-                 plus:1
-                 divide:2
-                 multiply:3
-                 inverse:4)
+                 plus:0
+                 divide:1
+                 multiply:1
+                 inverse:2)
 
     fun {ShuntInternal Tokens OperatorStack OutputStack}
         case OperatorStack of
@@ -18,7 +19,7 @@ define
             [] _|nil then {ShuntTokens Tokens OperatorStack OutputStack}
             [] operator(type:H)|operator(type:S)|T then
                 if {OpLeq H S} then
-                    {ShuntTokens Tokens operator(type:H)|T operator(type:S)|OutputStack}
+                    {ShuntInternal Tokens operator(type:H)|T operator(type:S)|OutputStack}
                 else
                     {ShuntTokens Tokens OperatorStack OutputStack}
                 end
@@ -44,6 +45,8 @@ define
     end
 
     fun {Shunt Tokens}
-        {ShuntInternal Tokens nil nil}
+        {ShuntTokens Tokens nil nil}
     end
+    
+    {System.show {Shunt [number(3.0) operator(type:minus) number(10.0) operator(type:multiply) number(9.0) operator(type:plus) number(3.0)]}}
 end
