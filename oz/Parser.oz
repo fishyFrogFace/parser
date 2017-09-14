@@ -92,36 +92,43 @@ define
         {List.map OneToken Lexemes}
     end
 
+    fun {InterpretInv Inv Stack Tokens}
+        case Stack of
+            nil then error(emptyStack)|Stack
+            [] number(Num)|Remainder then {Iterate number({Inverses.Inv Num})|Remainder Tokens}
+            else
+                error(nonNum)|Stack
+        end
+    end
+
+    fun {InterpretOp Op Stack Tokens}
+        case Stack of
+            nil then error(emptyStack)|Stack
+            [] _|nil then error(emptyStack)|Stack
+            [] number(Num1)|number(Num2)|Remainder then
+                {Iterate number({Opmap.Op Num2 Num1})|Remainder Tokens}
+            else
+                error(nonNum)|Stack
+        end
+    end
+
+    fun {Iterate Stack Tokens}
+        case Tokens of
+            nil then {List.reverse Stack}
+        [] number(Num)|T then {Iterate number(Num)|Stack T}
+        [] invalid(_)|_ then error(parse)|Stack
+        [] command(p)|T then
+            {Commands.p Stack}
+            {Iterate Stack T}
+        [] command(d)|T then {Iterate {Commands.d Stack} T}
+        [] inverse(Inv)|T then {InterpretInv Inv Stack T}
+        [] operator(type:Op)|T then {InterpretOp Op Stack T}
+        else
+            error(nonToken)|Stack
+        end
+    end
 
     fun {Interpret Tokens}
-        fun {Iterate Stack Tokens}
-            case Tokens of
-                nil then {List.reverse Stack}
-            [] number(Num)|T then {Iterate number(Num)|Stack T}
-            [] invalid(_)|_ then error(parse)|Stack
-            [] command(p)|T then
-                {Commands.p Stack}
-                {Iterate Stack T}
-            [] command(d)|T then {Iterate {Commands.d Stack} T}
-            [] inverse(Inv)|T then
-                case Stack of
-                    nil then error(emptyStack)|Stack
-                    [] number(Num)|Remainder then {Iterate number({Inverses.Inv Num})|Remainder T}
-                    else
-                        error(nonNum)|Stack
-                    end
-            [] operator(type:Op)|T then
-                case Stack of
-                    nil then error(emptyStack)|Stack
-                    [] _|nil then error(emptyStack)|Stack
-                    [] number(Num1)|number(Num2)|Remainder then
-                        {Iterate number({Opmap.Op Num2 Num1})|Remainder T}
-                    else
-                        error(nonNum)|Stack
-                end
-            end
-        end
-        in
         {Iterate nil Tokens}
     end
     
