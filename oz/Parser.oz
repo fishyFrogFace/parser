@@ -52,7 +52,12 @@ define
     end
     
     fun {FloatSplit L}
-        {List.map CheckInts {List.splitOn L 46}}
+        case L of
+            45|T then
+                {List.map CheckInts {List.splitOn T 46}}
+            else
+                {List.map CheckInts {List.splitOn L 46}}
+        end
     end
 
     fun {CheckFloats L}
@@ -135,4 +140,5 @@ define
     fun {Execute Line}
         {Interpret {Tokenize {Lex Line}}}
     end
+
 end
